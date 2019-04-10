@@ -1263,16 +1263,28 @@
                 );
                 resolvePromise(deferred, response, data, filledObject);
               } else {
-                data = restangularizeElem(
-                  __this[config.restangularFields.parentResource],
-                  elem,
-                  __this[config.restangularFields.route],
-                  true,
-                  null,
-                  fullParams
-                );
+                if (_.isArray(elem)) {
+                  var data = _.map(elem, function(e) {
+                    if (!__this[config.restangularFields.restangularCollection]) {
+                      return restangularizeElem(__this, e, what, true, data);
+                    } else {
+                      return restangularizeElem(__this[config.restangularFields.parentResource],
+                        e, __this[config.restangularFields.route], true, data);
+                    }
+                  });
+                  elem = _.extend(elem, data);
+                } else {
+                  data = restangularizeElem(
+                      __this[config.restangularFields.parentResource],
+                      elem,
+                      __this[config.restangularFields.route],
+                      true,
+                      null,
+                      fullParams
+                  );
+                  data[config.restangularFields.singleOne] = __this[config.restangularFields.singleOne];
+                }
 
-                data[config.restangularFields.singleOne] = __this[config.restangularFields.singleOne];
                 resolvePromise(deferred, response, data, filledObject);
               }
 

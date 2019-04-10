@@ -1,6 +1,6 @@
 /**
  * Restful Resources service for AngularJS apps
- * @version v1.6.1 - 2017-01-06 * @link https://github.com/mgonto/restangular
+ * @version v1.6.1 - 2019-04-10 * @link https://github.com/mgonto/restangular
  * @author Martin Gontovnikas <martin@gon.to>
  * @license MIT License, http://www.opensource.org/licenses/MIT
  */(function(root, factory) {
@@ -994,7 +994,7 @@
           _.each(requestMethods, function(requestFunc, name) {
             var callOperation = name === 'delete' ? 'remove' : name;
             _.each(['do', 'custom'], function(alias) {
-              elem[alias + name.toUpperCase()] = _.bind(requestFunc, elem, callOperation);
+              elem[config.restangularFields[alias + name.toUpperCase()]] = _.bind(requestFunc, elem, callOperation);
             });
           });
           elem[config.restangularFields.customGETLIST] = _.bind(fetchFunction, elem);
@@ -1268,16 +1268,28 @@
                 );
                 resolvePromise(deferred, response, data, filledObject);
               } else {
-                data = restangularizeElem(
-                  __this[config.restangularFields.parentResource],
-                  elem,
-                  __this[config.restangularFields.route],
-                  true,
-                  null,
-                  fullParams
-                );
+                if (_.isArray(elem)) {
+                  var data = _.map(elem, function(e) {
+                    if (!__this[config.restangularFields.restangularCollection]) {
+                      return restangularizeElem(__this, e, what, true, data);
+                    } else {
+                      return restangularizeElem(__this[config.restangularFields.parentResource],
+                        e, __this[config.restangularFields.route], true, data);
+                    }
+                  });
+                  elem = _.extend(elem, data);
+                } else {
+                  data = restangularizeElem(
+                      __this[config.restangularFields.parentResource],
+                      elem,
+                      __this[config.restangularFields.route],
+                      true,
+                      null,
+                      fullParams
+                  );
+                  data[config.restangularFields.singleOne] = __this[config.restangularFields.singleOne];
+                }
 
-                data[config.restangularFields.singleOne] = __this[config.restangularFields.singleOne];
                 resolvePromise(deferred, response, data, filledObject);
               }
 
